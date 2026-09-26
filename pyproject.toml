@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "violit-drawable-konva"
+version = "0.1.0"
+description = "Violit drawable canvas widget using Konva.js (same core as streamlit-drawable-konva)"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [
+  { name = "George Siogkas", email = "gsiogkas@cvrlab.com" },
+]
+dependencies = [
+  "violit>=0.8.29",
+  "numpy",
+  "pillow",
+]
+
+[project.urls]
+Homepage = "https://github.com/gsiogkas/violit-drawable-konva"
+Documentation = "https://github.com/gsiogkas/violit-drawable-konva#readme"
+Repository = "https://github.com/gsiogkas/violit-drawable-konva"
+Issues = "https://github.com/gsiogkas/violit-drawable-konva/issues"
+Related = "https://github.com/gsiogkas/streamlit-drawable-konva"
+
+[project.optional-dependencies]
+dev = ["pytest", "wheel"]
+
+[tool.setuptools.packages.find]
+include = ["violit_drawable_konva*"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+violit_drawable_konva = ["static/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
