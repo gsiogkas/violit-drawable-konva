@@ -1,9 +1,15 @@
 # Violit Drawable Konva
 
+![Usage demo — draw, spline, background, crop, and json_data coordinates](docs/assets/usage.gif)
+
 Violit widget wrapping the same Konva canvas used by
 [`streamlit-drawable-konva`](https://github.com/gsiogkas/streamlit-drawable-konva).
 
 Requires **Violit ≥ 0.8.29** (`app.register_js_widget`).
+
+Coordinates come back in `result.json_data["objects"]` (`x`, `y`, `width`,
+`height`, `points`, …) — same scene contract as the Streamlit package. The demo
+shows them in a table under the canvas.
 
 ## Install (editable)
 
@@ -92,42 +98,31 @@ tests/
 scripts/sync_standalone.sh
 ```
 
-## First git commit
+## Push to GitHub
 
-Repo is already `git init`'d on `main`. From the package root:
+Local `main` already has an initial commit; there is **no remote** yet.
 
 ```bash
 cd /devel/dev/cvrlab/violit-drawable-konva
 
-# review
+# 1) Commit latest local work (GIF, coordinate table, …)
 git status
-git diff --cached
-git diff
-
-# stage everything that should ship (standalone.js is intentional)
-git add .gitignore LICENSE README.md pyproject.toml \
-  demo scripts tests violit_drawable_konva
-
-# optional: leave uv.lock / .venv out (.gitignore already excludes them)
-
+git add docs/assets/usage.gif README.md demo/app.py
 git commit -m "$(cat <<'EOF'
-Initial violit-drawable-konva package.
+Add usage GIF and show object coordinates in the demo.
 
-Violit register_js_widget host for the shared Konva standalone bundle,
-with demo, tests, and sync script from streamlit-drawable-konva.
 EOF
 )"
 
-git status
-git log -1 --stat
+# 2) Create the GitHub repo and set origin (pick public or private)
+gh repo create gsiogkas/violit-drawable-konva --public --source=. --remote=origin --push
+
+# If the empty repo already exists on GitHub instead:
+#   git remote add origin git@github.com:gsiogkas/violit-drawable-konva.git
+#   git push -u origin main
 ```
 
-Remote (when ready):
-
-```bash
-gh repo create gsiogkas/violit-drawable-konva --public --source=. --remote=origin
-git push -u origin main
-```
+Confirm: `https://github.com/gsiogkas/violit-drawable-konva`
 
 ## Manual port checklist
 
@@ -136,4 +131,4 @@ git push -u origin main
 3. `uv pip install -e ".[dev]"` (needs `violit>=0.8.29`).
 4. `pytest -q`.
 5. `violit run demo/app.py --reload --localhost --port 8031`.
-6. First commit (see above).
+6. Push to GitHub (see above).

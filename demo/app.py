@@ -123,20 +123,56 @@ vl_canvas(
 def scene_panel():
     payload = canvas_payload.value or {}
     json_data = payload.get("json_data")
-    if json_data:
-        objects = json_data.get("objects") or []
-        app.markdown(f"**Objects:** {len(objects)}")
-        app.code(json.dumps(json_data, indent=2)[:4000], language="json")
+    if not json_data:
+        app.markdown("_Draw something to see coordinates / scene JSON here._")
+        return
 
-        for spline in splines_from_json(json_data):
-            control = spline_control_points(spline)
-            dense = sample_spline(spline, samples_per_segment=8)
-            app.markdown(
-                f"Spline `{spline.get('id')}`: {len(control)} control points → "
-                f"{len(dense)} sampled points"
+    import pandas as pd
+
+    objects = json_data.get("objects") or []
+    app.markdown(f"**Objects:** {len(objects)}")
+
+    if objects:
+        # Flatten scene objects so x/y/width/height/points are visible (like Streamlit demo).
+        rows = []
+        for obj in objects:
+            row = {
+                "id": obj.get("id"),
+                "type": obj.get("type"),
+                "x": obj.get("x"),
+                "y": obj.get("y"),
+                "width": obj.get("width"),
+                "height": obj.get("height"),
+                "radius": obj.get("radius"),
+                "points": obj.get("points"),
+                "groupId": obj.get("groupId"),
+            }
+            rows.append(row)
+        df = pd.DataFrame(rows)
+        # stringify nested lists for the grid
+        if "points" in df.columns:
+            df["points"] = df["points"].map(
+                lambda v: "" if v is None else str(v)
             )
-    else:
-        app.markdown("_Draw something to see scene JSON here._")
+        app.markdown("#### Coordinates (from `json_data.objects`)")
+        app.dataframe(df, height=220, hide_index=True, key="objects_df")
+
+    for spline in splines_from_json(json_data):
+        control = spline_control_points(spline)
+        dense = sample_spline(spline, samples_per_segment=8)
+        app.markdown(
+            f"**Spline `{spline.get('id')}`** — {len(control)} control points "
+            f"→ {len(dense)} sampled"
+        )
+        app.dataframe(
+            pd.DataFrame(control, columns=["x", "y"]),
+            height=160,
+            hide_index=True,
+            key=f"spline_ctrl_{spline.get('id')}",
+        )
+
+    app.markdown("#### Raw `json_data`")
+    app.code(json.dumps(json_data, indent=2)[:6000], language="json")
 
 
 scene_panel()
