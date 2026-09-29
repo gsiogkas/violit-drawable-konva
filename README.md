@@ -1,6 +1,6 @@
 # Violit Drawable Konva
 
-![Usage demo — draw, spline, background, crop, and json_data coordinates](docs/assets/usage.gif)
+![Usage demo — draw, spline, background, crop, image comparison, and coordinates](docs/assets/usage.gif)
 
 Violit widget wrapping the same Konva canvas used by
 [`streamlit-drawable-konva`](https://github.com/gsiogkas/streamlit-drawable-konva)
