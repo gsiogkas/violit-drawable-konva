@@ -11,6 +11,7 @@ from typing import Any, Callable, Optional
 from violit_drawable_konva.payload import build_component_data
 
 WIDGET_NAME = "drawable_konva"
+COMPARISON_WIDGET_NAME = "image_comparison"
 STATIC_MOUNT_PATH = "/violit-drawable-konva"
 
 _PACKAGE_ROOT = Path(__file__).resolve().parent
@@ -58,6 +59,27 @@ if (!api || typeof api.mount !== "function") {
 var controller = api.mount(element, props || {}, function (payload) {
   emit("change", payload);
 });
+return {
+  update: function (nextProps) {
+    if (controller && typeof controller.update === "function") {
+      controller.update(nextProps || {});
+    }
+  },
+  destroy: function () {
+    if (controller && typeof controller.destroy === "function") {
+      controller.destroy();
+    }
+  }
+};
+"""
+
+_COMPARE_MOUNT_JS = r"""
+var api = window.DrawableKonvaCanvas;
+if (!api || typeof api.mountImageComparison !== "function") {
+  console.error("DrawableKonvaCanvas.mountImageComparison missing — rebuild/sync standalone.js");
+  return {};
+}
+var controller = api.mountImageComparison(element, props || {});
 return {
   update: function (nextProps) {
     if (controller && typeof controller.update === "function") {
@@ -124,6 +146,13 @@ def ensure_registered(app: Any) -> None:
         mount_js=_MOUNT_JS,
         js=[f"{STATIC_MOUNT_PATH}/standalone.js"],
         events=["change"],
+        expose_method=False,
+    )
+    app.register_js_widget(
+        COMPARISON_WIDGET_NAME,
+        mount_js=_COMPARE_MOUNT_JS,
+        js=[f"{STATIC_MOUNT_PATH}/standalone.js"],
+        events=[],
         expose_method=False,
     )
     app._vl_drawable_konva_registered = True
@@ -347,3 +376,146 @@ def vl_canvas(
             image_data = None
 
     return CanvasResult(image_data=image_data, json_data=current.get("json_data"))
+
+
+def _coerce_pil(source: Any):
+    from PIL import Image
+
+    if source is None:
+        raise ValueError("image is required")
+    if isinstance(source, Image.Image):
+        return source.convert("RGBA")
+    if hasattr(source, "read"):
+        try:
+            source.seek(0)
+        except Exception:
+            pass
+        return Image.open(source).convert("RGBA")
+    if isinstance(source, (bytes, bytearray)):
+        return Image.open(io.BytesIO(source)).convert("RGBA")
+    if isinstance(source, str):
+        if source.startswith("data:image"):
+            return _data_url_to_image(source).convert("RGBA")
+        return Image.open(source).convert("RGBA")
+    try:
+        import numpy as np
+
+        if isinstance(source, np.ndarray):
+            arr = source
+            if arr.ndim == 2:
+                return Image.fromarray(arr.astype("uint8"), mode="L").convert("RGBA")
+            if arr.shape[-1] == 4:
+                return Image.fromarray(arr.astype("uint8"), mode="RGBA")
+            return Image.fromarray(arr.astype("uint8"), mode="RGB").convert("RGBA")
+    except Exception:
+        pass
+    raise TypeError(f"Unsupported image type: {type(source)!r}")
+
+
+def _comparison_props(
+    img1: Any,
+    img2: Any,
+    *,
+    label1: str,
+    label2: str,
+    width: int,
+    height: Optional[int],
+    starting_position: float,
+    show_labels: bool,
+) -> dict[str, Any]:
+    left = _coerce_pil(img1)
+    right = _coerce_pil(img2)
+    h = height
+    if h is None:
+        aspect = left.height / max(left.width, 1)
+        h = max(1, int(round(width * aspect)))
+    left_r = left.resize((width, h))
+    right_r = right.resize((width, h))
+    return {
+        "img1URL": _image_to_data_url(left_r),
+        "img2URL": _image_to_data_url(right_r),
+        "label1": label1,
+        "label2": label2,
+        "width": width,
+        "height": h,
+        "startingPosition": float(starting_position),
+        "showLabels": show_labels,
+    }
+
+
+def vl_image_comparison(
+    app: Any,
+    img1: Any = None,
+    img2: Any = None,
+    *,
+    label1: str = "Before",
+    label2: str = "After",
+    width: int = 700,
+    height: Optional[int] = None,
+    starting_position: float = 50,
+    show_labels: bool = True,
+    key: Optional[str] = None,
+) -> None:
+    """Before/after image comparison slider (companion to ``vl_canvas``).
+
+    ``img1`` / ``img2`` may be PIL images, file-likes, paths, data URLs, NumPy
+    arrays, or Violit ``State`` / zero-arg callables yielding any of those.
+    """
+    ensure_registered(app)
+    widget_key = key or "image_comparison"
+    layout_h = height
+
+    reactive = (
+        _is_stateful(img1)
+        or _is_stateful(img2)
+        or (callable(img1) and not isinstance(img1, type))
+        or (callable(img2) and not isinstance(img2, type))
+    )
+
+    if reactive:
+
+        def props() -> dict[str, Any]:
+            src1 = img1.value if _is_stateful(img1) else img1() if callable(img1) else img1
+            src2 = img2.value if _is_stateful(img2) else img2() if callable(img2) else img2
+            return _comparison_props(
+                src1,
+                src2,
+                label1=label1,
+                label2=label2,
+                width=width,
+                height=height,
+                starting_position=starting_position,
+                show_labels=show_labels,
+            )
+
+        # Resolve once for layout height; widget builder re-resolves props.
+        sample = props()
+        layout_h = int(sample["height"])
+        # Pass a callable that returns the full props dict — but app.widget
+        # resolves each prop value, not the whole dict. Expand keys as callables.
+        def make_getter(name: str):
+            def _get():
+                return props()[name]
+
+            return _get
+
+        widget_props = {name: make_getter(name) for name in sample}
+    else:
+        widget_props = _comparison_props(
+            img1,
+            img2,
+            label1=label1,
+            label2=label2,
+            width=width,
+            height=height,
+            starting_position=starting_position,
+            show_labels=show_labels,
+        )
+        layout_h = int(widget_props["height"])
+
+    app.widget(
+        COMPARISON_WIDGET_NAME,
+        key=widget_key,
+        style=f"width:{width}px;min-height:{layout_h}px;",
+        **widget_props,
+    )

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "violit-drawable-konva"
-version = "0.1.0"
-description = "Violit drawable canvas widget using Konva.js (same core as streamlit-drawable-konva)"
+version = "0.2.0"
+description = "Violit drawable Konva canvas + before/after image comparison"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

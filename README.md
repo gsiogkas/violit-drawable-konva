@@ -3,13 +3,21 @@
 ![Usage demo — draw, spline, background, crop, and json_data coordinates](docs/assets/usage.gif)
 
 Violit widget wrapping the same Konva canvas used by
-[`streamlit-drawable-konva`](https://github.com/gsiogkas/streamlit-drawable-konva).
+[`streamlit-drawable-konva`](https://github.com/gsiogkas/streamlit-drawable-konva)
+(**0.2.0** tracks Streamlit **0.5.x** standalone).
 
 Requires **Violit ≥ 0.8.29** (`app.register_js_widget`).
 
-Coordinates come back in `result.json_data["objects"]` (`x`, `y`, `width`,
-`height`, `points`, …) — same scene contract as the Streamlit package. The demo
-shows them in a table under the canvas.
+## Features
+
+- `vl_canvas` — drawable Konva canvas (same tools as `st_canvas`)
+- `vl_image_comparison` — before/after slider companion (same as `st_image_comparison`)
+- Background color / image (upload or sample)
+- Scene `json_data` with coordinates (`x`/`y`/`width`/`height`/`points`)
+- Spline helpers: `splines_from_json`, `sample_spline`, …
+
+Demo uses **dark** theme. Pass Violit `State` / callables into `vl_canvas`
+(not `.value`) so drawing mode and stroke update live.
 
 ## Install (editable)
 
@@ -41,10 +49,6 @@ source .venv/bin/activate
 
 `demo/app.py` must end with `app.run()` (Violit does not auto-start the server).
 
-Sidebar: drawing tool, stroke, **background color**, **background image** upload
-(or “Use sample background”). Pass Violit `State` / callables into `vl_canvas`
-(not `.value`) so props update live.
-
 ## Tests
 
 ```bash
@@ -55,10 +59,10 @@ pytest -q
 
 ```python
 import violit as vl
-from violit_drawable_konva import ensure_registered, vl_canvas
+from violit_drawable_konva import ensure_registered, vl_canvas, vl_image_comparison
 
-app = vl.App(title="Canvas")
-ensure_registered(app)  # optional; also called by vl_canvas
+app = vl.App(title="Canvas", theme="dark")
+ensure_registered(app)  # optional; also called by vl_canvas / vl_image_comparison
 
 drawing_mode = app.state("polygon", key="drawing_mode")
 stroke_width = app.state(3, key="stroke_width")
@@ -80,6 +84,8 @@ result = vl_canvas(
     bind=payload,
 )
 # result.json_data / result.image_data
+
+vl_image_comparison(app, img_before, img_after, width=600, key="cmp")
 ```
 
 Helpers mirror the Streamlit package: `crop_box_from_json`, `objects_by_group`,
@@ -89,46 +95,46 @@ Helpers mirror the Streamlit package: `crop_box_from_json`, `objects_by_group`,
 
 ```
 violit_drawable_konva/
-  api.py              # ensure_registered, vl_canvas
-  payload.py          # camelCase props (shared contract)
-  spline.py / helpers.py / scene_helpers.py
-  static/standalone.js  # synced IIFE (window.DrawableKonvaCanvas)
+  api.py                # ensure_registered, vl_canvas, vl_image_comparison
+  payload.py / spline.py / helpers.py
+  static/standalone.js  # synced IIFE (mount + mountImageComparison)
 demo/app.py
 tests/
 scripts/sync_standalone.sh
 ```
 
-## Push to GitHub
-
-Local `main` already has an initial commit; there is **no remote** yet.
+## Publish (PyPI)
 
 ```bash
 cd /devel/dev/cvrlab/violit-drawable-konva
 
-# 1) Commit latest local work (GIF, coordinate table, …)
+# 1) Sync JS from Streamlit build (after streamlit 0.5.x is built)
+bash scripts/sync_standalone.sh
+
+# 2) Tests
+.venv/bin/python -m pytest -q
+
+# 3) Commit & push
+git add -A
 git status
-git add docs/assets/usage.gif README.md demo/app.py
-git commit -m "$(cat <<'EOF'
-Add usage GIF and show object coordinates in the demo.
+git commit -m "Release 0.2.0: image comparison companion and dark demo."
+git push -u origin main
+git tag v0.2.0 && git push origin v0.2.0
 
-EOF
-)"
-
-# 2) Create the GitHub repo and set origin (pick public or private)
-gh repo create gsiogkas/violit-drawable-konva --public --source=. --remote=origin --push
-
-# If the empty repo already exists on GitHub instead:
-#   git remote add origin git@github.com:gsiogkas/violit-drawable-konva.git
-#   git push -u origin main
+# 4) Build & publish
+uv build
+uv publish   # needs UV_PUBLISH_TOKEN or interactive PyPI token
 ```
 
-Confirm: `https://github.com/gsiogkas/violit-drawable-konva`
+Verify: https://pypi.org/project/violit-drawable-konva/
+
+Bump `version` in `pyproject.toml` before each new upload.
 
 ## Manual port checklist
 
-1. Build Streamlit frontend (`npm run build` in `streamlit-drawable-konva/.../frontend`) so `build/standalone.js` exists.
-2. `bash scripts/sync_standalone.sh` into this package.
-3. `uv pip install -e ".[dev]"` (needs `violit>=0.8.29`).
-4. `pytest -q`.
-5. `violit run demo/app.py --reload --localhost --port 8031`.
-6. Push to GitHub (see above).
+1. Build Streamlit frontend (`npm run build`) so `standalone.js` exists.
+2. `bash scripts/sync_standalone.sh`
+3. `uv pip install -e ".[dev]"` (`violit>=0.8.29`)
+4. `pytest -q`
+5. `violit run demo/app.py --reload --localhost --port 8031`
+6. Commit / tag / `uv publish` (see above)

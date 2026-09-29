@@ -16,9 +16,10 @@ from violit_drawable_konva import (
     spline_control_points,
     splines_from_json,
     vl_canvas,
+    vl_image_comparison,
 )
 
-app = vl.App(title="Violit Drawable Konva Demo", theme="light")
+app = vl.App(title="Violit Drawable Konva Demo", theme="dark")
 ensure_registered(app)
 
 drawing_mode = app.state("freedraw", key="drawing_mode")
@@ -176,5 +177,40 @@ def scene_panel():
 
 
 scene_panel()
+
+app.markdown("## Image comparison")
+app.markdown(
+    "Companion slider (`vl_image_comparison`) — drag to compare before/after."
+)
+
+
+def _compare_before() -> Image.Image:
+    img = Image.new("RGB", (640, 360), "#dce8f5")
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([40, 40, 280, 200], outline="#2a6f97", width=4)
+    draw.text((50, 50), "before", fill="#1b4332")
+    return img
+
+
+def _compare_after() -> Image.Image:
+    img = _compare_before()
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([320, 80, 520, 280], outline="#e67e22", width=5)
+    draw.line([(80, 220), (560, 300)], fill="#c0392b", width=6)
+    draw.text((330, 90), "after", fill="#e67e22")
+    return img
+
+
+vl_image_comparison(
+    app,
+    _compare_before(),
+    _compare_after(),
+    label1="Before",
+    label2="After",
+    width=640,
+    height=360,
+    starting_position=45,
+    key="demo_compare",
+)
 
 app.run()
