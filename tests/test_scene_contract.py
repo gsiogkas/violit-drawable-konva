@@ -45,9 +45,11 @@ def test_build_component_data_forwards_tools_and_picker():
         enable_viewport_controls=True,
         tools=["line", "rect", "transform"],
         display_tool_picker=True,
+        tool_picker_style="icons",
     )
     assert data["tools"] == ["line", "rect", "transform"]
     assert data["displayToolPicker"] is True
+    assert data["toolPickerStyle"] == "icons"
 
 
 def test_build_component_data_forwards_transform_options():

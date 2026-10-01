@@ -238,6 +238,8 @@ def vl_canvas(
     spline_control_point_radius: Any = 5,
     tools: Any = None,
     display_tool_picker: Any = False,
+    tool_picker_style: Any = "labels",
+    display_color_pickers: Any = False,
     key: Optional[str] = None,
     bind: Any = None,
     on_change: Optional[Callable[[dict], None]] = None,
@@ -258,6 +260,8 @@ def vl_canvas(
 
     ``tools`` is an optional allow-list of drawing mode names (empty/None = all).
     ``display_tool_picker`` shows an in-canvas tool button row for those modes.
+    ``tool_picker_style`` is ``"labels"`` or ``"icons"``.
+    ``display_color_pickers`` shows stroke/fill color inputs on the toolbar.
     """
     ensure_registered(app)
 
@@ -350,6 +354,8 @@ def vl_canvas(
         spline_control_point_radius=spline_control_point_radius,
         tools=tools,
         display_tool_picker=display_tool_picker,
+        tool_picker_style=tool_picker_style,
+        display_color_pickers=display_color_pickers,
     )
 
     def _handle_change(payload: Any = None) -> None:
@@ -368,6 +374,8 @@ def vl_canvas(
         chrome_h += 72 if _concrete(enable_viewport_controls) else 40
     if _concrete(display_tool_picker):
         chrome_h += 40
+    if _concrete(display_color_pickers):
+        chrome_h += 8
 
     app.widget(
         WIDGET_NAME,

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "violit-drawable-konva"
-version = "0.3.0"
+version = "0.4.0"
 description = "Violit drawable Konva canvas with tool picker and before/after image comparison"
 readme = "README.md"
 license = "MIT"

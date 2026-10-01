@@ -4,7 +4,7 @@
 
 Violit widget wrapping the same Konva canvas used by
 [`streamlit-drawable-konva`](https://github.com/gsiogkas/streamlit-drawable-konva)
-(**0.3.0** tracks Streamlit **0.6.x** standalone).
+(**0.4.0** tracks Streamlit **0.7.x** standalone).
 
 Requires **Violit ≥ 0.8.29** (`app.register_js_widget`).
 
@@ -12,6 +12,8 @@ Requires **Violit ≥ 0.8.29** (`app.register_js_widget`).
 
 - `vl_canvas` — drawable Konva canvas (same tools as `st_canvas`)
 - **In-canvas tool picker** — `tools=[…]` + `display_tool_picker=True`
+- **Icon or label tools** — `tool_picker_style="icons"` | `"labels"`
+- **Toolbar color pickers** — `display_color_pickers=True` for stroke/fill
 - `vl_image_comparison` — before/after slider companion (same as `st_image_comparison`)
 - Background color / image (upload or sample)
 - Scene `json_data` with coordinates (`x`/`y`/`width`/`height`/`points`)
@@ -19,7 +21,8 @@ Requires **Violit ≥ 0.8.29** (`app.register_js_widget`).
 
 Demo uses **dark** theme. Pass Violit `State` / callables into `vl_canvas`
 (not `.value`) so drawing mode and stroke update live. With
-`display_tool_picker=True`, tools can also be switched on the canvas itself.
+`display_tool_picker=True`, tools can also be switched on the canvas itself;
+enable `display_color_pickers` for stroke/fill next to the tools.
 
 ## Install (editable)
 
@@ -84,6 +87,8 @@ result = vl_canvas(
     width=600,
     tools=["freedraw", "line", "rect", "polygon", "transform", "pan"],
     display_tool_picker=True,
+    tool_picker_style="icons",
+    display_color_pickers=True,
     key="c1",
     bind=payload,
 )
@@ -112,7 +117,7 @@ scripts/sync_standalone.sh
 ```bash
 cd /devel/dev/cvrlab/violit-drawable-konva
 
-# 1) Sync JS from Streamlit build (after streamlit 0.6.x is built)
+# 1) Sync JS from Streamlit build (after streamlit 0.7.x is built)
 bash scripts/sync_standalone.sh
 
 # 2) Tests
@@ -121,9 +126,9 @@ bash scripts/sync_standalone.sh
 # 3) Commit & push
 git add -A
 git status
-git commit -m "Release 0.3.0: in-canvas tool picker and tools allow-list."
+git commit -m "Release 0.4.0: icon tool picker and toolbar color pickers."
 git push -u origin main
-git tag v0.3.0 && git push origin v0.3.0
+git tag v0.4.0 && git push origin v0.4.0
 
 # 4) Build & publish
 uv build
@@ -134,12 +139,12 @@ Verify: https://pypi.org/project/violit-drawable-konva/
 
 Bump `version` in `pyproject.toml` before each new upload (PyPI versions are immutable).
 
-### Quick PyPI update (0.2.0 → 0.3.0)
+### Quick PyPI update (0.3.0 → 0.4.0)
 
 ```bash
 bash scripts/sync_standalone.sh
 uv build && uv publish
-pip install -U violit-drawable-konva   # expect 0.3.0
+pip install -U violit-drawable-konva   # expect 0.4.0
 ```
 
 ## Manual port checklist

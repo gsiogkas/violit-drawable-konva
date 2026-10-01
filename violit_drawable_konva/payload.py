@@ -56,6 +56,8 @@ def build_component_data(
     spline_control_point_radius: Any = 5,
     tools: Optional[Any] = None,
     display_tool_picker: Any = False,
+    tool_picker_style: Any = "labels",
+    display_color_pickers: Any = False,
 ) -> dict[str, Any]:
     if _is_reactive(drawing_mode) or _is_reactive(update_streamlit):
         def realtime_update() -> bool:
@@ -73,6 +75,12 @@ def build_component_data(
         tools_prop = tools
     else:
         tools_prop = list(tools) if tools else []
+
+    if _is_reactive(tool_picker_style):
+        style_prop: Any = tool_picker_style
+    else:
+        raw_style = str(tool_picker_style or "labels")
+        style_prop = raw_style if raw_style in ("labels", "icons") else "labels"
 
     return {
         "fillColor": fill_color,
@@ -93,4 +101,6 @@ def build_component_data(
         "splineControlPointRadius": spline_control_point_radius,
         "tools": tools_prop,
         "displayToolPicker": display_tool_picker,
+        "toolPickerStyle": style_prop,
+        "displayColorPickers": display_color_pickers,
     }

@@ -30,6 +30,8 @@ bg_file = app.state(None, key="bg_file")
 use_sample_bg = app.state(False, key="use_sample_bg")
 show_spline_points = app.state(False, key="show_spline_points")
 show_tool_picker = app.state(True, key="show_tool_picker")
+tool_picker_style = app.state("icons", key="tool_picker_style")
+show_color_pickers = app.state(True, key="show_color_pickers")
 canvas_payload = app.state(
     {"image_data_url": None, "json_data": None},
     key="canvas_payload",
@@ -86,6 +88,13 @@ with app.sidebar:
     app.checkbox("Use sample background", bind=use_sample_bg)
     app.checkbox("Show spline control points", bind=show_spline_points)
     app.checkbox("In-canvas tool picker", bind=show_tool_picker)
+    app.selectbox(
+        "Tool picker style",
+        options=["labels", "icons"],
+        bind=tool_picker_style,
+        key="tool_picker_style_select",
+    )
+    app.checkbox("Color pickers on canvas", bind=show_color_pickers)
     app.markdown(
         """
 **Tips**
@@ -96,6 +105,7 @@ with app.sidebar:
 - **transform**: double-click an object to remove it
 - Background image overrides background color (same as Streamlit)
 - With the tool picker on, switch modes from the canvas toolbar
+- Use **icons** style for a compact tool row; enable color pickers for stroke/fill
 """
     )
 
@@ -118,6 +128,8 @@ vl_canvas(
     drawing_mode=drawing_mode,
     display_toolbar=True,
     display_tool_picker=show_tool_picker,
+    tool_picker_style=tool_picker_style,
+    display_color_pickers=show_color_pickers,
     spline_show_control_points=show_spline_points,
     key="demo_canvas",
     bind=canvas_payload,
