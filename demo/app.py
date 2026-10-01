@@ -29,6 +29,7 @@ bg_color = app.state("#ffffff", key="bg_color")
 bg_file = app.state(None, key="bg_file")
 use_sample_bg = app.state(False, key="use_sample_bg")
 show_spline_points = app.state(False, key="show_spline_points")
+show_tool_picker = app.state(True, key="show_tool_picker")
 canvas_payload = app.state(
     {"image_data_url": None, "json_data": None},
     key="canvas_payload",
@@ -84,6 +85,7 @@ with app.sidebar:
     )
     app.checkbox("Use sample background", bind=use_sample_bg)
     app.checkbox("Show spline control points", bind=show_spline_points)
+    app.checkbox("In-canvas tool picker", bind=show_tool_picker)
     app.markdown(
         """
 **Tips**
@@ -93,6 +95,7 @@ with app.sidebar:
   double-click / Backspace / Undo removes the last point
 - **transform**: double-click an object to remove it
 - Background image overrides background color (same as Streamlit)
+- With the tool picker on, switch modes from the canvas toolbar
 """
     )
 
@@ -114,6 +117,7 @@ vl_canvas(
     width=CANVAS_W,
     drawing_mode=drawing_mode,
     display_toolbar=True,
+    display_tool_picker=show_tool_picker,
     spline_show_control_points=show_spline_points,
     key="demo_canvas",
     bind=canvas_payload,

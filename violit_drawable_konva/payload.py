@@ -54,6 +54,8 @@ def build_component_data(
     transform_options: Optional[Any] = None,
     spline_show_control_points: Any = False,
     spline_control_point_radius: Any = 5,
+    tools: Optional[Any] = None,
+    display_tool_picker: Any = False,
 ) -> dict[str, Any]:
     if _is_reactive(drawing_mode) or _is_reactive(update_streamlit):
         def realtime_update() -> bool:
@@ -64,6 +66,13 @@ def build_component_data(
         realtime: Any = realtime_update
     else:
         realtime = bool(update_streamlit) and drawing_mode not in ("polygon", "spline")
+
+    if tools is None:
+        tools_prop: Any = []
+    elif _is_reactive(tools):
+        tools_prop = tools
+    else:
+        tools_prop = list(tools) if tools else []
 
     return {
         "fillColor": fill_color,
@@ -82,4 +91,6 @@ def build_component_data(
         "transformOptions": transform_options or {},
         "splineShowControlPoints": spline_show_control_points,
         "splineControlPointRadius": spline_control_point_radius,
+        "tools": tools_prop,
+        "displayToolPicker": display_tool_picker,
     }

@@ -24,6 +24,30 @@ def test_build_component_data_defaults():
     assert data["transformOptions"] == {}
     assert data["drawingMode"] == "freedraw"
     assert data["canvasHeight"] == 400
+    assert data["tools"] == []
+    assert data["displayToolPicker"] is False
+
+
+def test_build_component_data_forwards_tools_and_picker():
+    data = build_component_data(
+        fill_color="#eee",
+        stroke_width=3,
+        stroke_color="#000",
+        background_color="#fff",
+        background_image_url=None,
+        update_streamlit=True,
+        height=400,
+        width=600,
+        drawing_mode="line",
+        initial_drawing={"version": "konva-1", "objects": []},
+        display_toolbar=True,
+        point_display_radius=3,
+        enable_viewport_controls=True,
+        tools=["line", "rect", "transform"],
+        display_tool_picker=True,
+    )
+    assert data["tools"] == ["line", "rect", "transform"]
+    assert data["displayToolPicker"] is True
 
 
 def test_build_component_data_forwards_transform_options():

@@ -236,6 +236,8 @@ def vl_canvas(
     transform_options: Optional[dict] = None,
     spline_show_control_points: Any = False,
     spline_control_point_radius: Any = 5,
+    tools: Any = None,
+    display_tool_picker: Any = False,
     key: Optional[str] = None,
     bind: Any = None,
     on_change: Optional[Callable[[dict], None]] = None,
@@ -253,6 +255,9 @@ def vl_canvas(
     change. ``background_image`` accepts a PIL image, file-like (e.g. Violit
     ``UploadedFile``), path, bytes, data URL, or a State/callable yielding one.
     When an image is set, ``background_color`` is cleared (same as Streamlit).
+
+    ``tools`` is an optional allow-list of drawing mode names (empty/None = all).
+    ``display_tool_picker`` shows an in-canvas tool button row for those modes.
     """
     ensure_registered(app)
 
@@ -343,6 +348,8 @@ def vl_canvas(
         transform_options=transform_options,
         spline_show_control_points=spline_show_control_points,
         spline_control_point_radius=spline_control_point_radius,
+        tools=tools,
+        display_tool_picker=display_tool_picker,
     )
 
     def _handle_change(payload: Any = None) -> None:
@@ -356,11 +363,17 @@ def vl_canvas(
         if on_change is not None:
             on_change(data)
 
+    chrome_h = 0
+    if _concrete(display_toolbar):
+        chrome_h += 72 if _concrete(enable_viewport_controls) else 40
+    if _concrete(display_tool_picker):
+        chrome_h += 40
+
     app.widget(
         WIDGET_NAME,
         key=widget_key,
         on_change=_handle_change,
-        style=f"width:{layout_w}px;min-height:{layout_h}px;",
+        style=f"width:{layout_w}px;min-height:{layout_h + chrome_h}px;",
         **props,
     )
 
